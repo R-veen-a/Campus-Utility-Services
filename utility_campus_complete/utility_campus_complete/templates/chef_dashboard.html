@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Chef Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-utensils me-3"></i>Chef Dashboard
+            </h1>
+            <p class="lead text-muted">Welcome back, {{ session.username }}! Manage canteen operations and menu planning.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('canteen_menu') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-utensils me-2"></i>Manage Menu
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-danger w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-success w-100" onclick="viewCanteenStatus()">
+                                <i class="fas fa-eye me-2"></i>Canteen Status
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-info w-100" onclick="viewInventory()">
+                                <i class="fas fa-boxes me-2"></i>Inventory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Menu -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>Today's Menu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if canteen_menu %}
+                        <div class="row">
+                            {% for item in canteen_menu %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title">{{ item.item_name }}</h6>
+                                                <p class="card-text text-muted">{{ item.meal_type.title() }}</p>
+                                                <span class="badge bg-success">₹{{ item.price }}</span>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-{{ 'success' if item.available else 'danger' }}">
+                                                    {{ 'Available' if item.available else 'Unavailable' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No menu items for today</p>
+                            <a href="{{ url_for('canteen_menu') }}" class="btn btn-warning">
+                                <i class="fas fa-plus me-2"></i>Add Menu Items
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ notification.message[:50] }}...</p>
+                                <small class="text-muted">{{ notification.created_at.split(' ')[0] }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if notification.category == 'alert' else 'info' if notification.category == 'info' else 'success' }}">
+                                {{ notification.category.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No new notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canteen Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Canteen Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-utensils fa-2x text-warning mb-2"></i>
+                                <h6>Menu Items</h6>
+                                <span class="badge bg-warning">{{ canteen_menu|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6>Daily Customers</h6>
+                                <span class="badge bg-primary">150</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-star fa-2x text-success mb-2"></i>
+                                <h6>Average Rating</h6>
+                                <span class="badge bg-success">4.5/5</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                                <h6>Service Hours</h6>
+                                <span class="badge bg-info">8 AM - 8 PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Items -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-fire me-2"></i>Popular Items
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Vegetable Biryani</h6>
+                                <small class="text-muted">Lunch</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">45 orders</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Chicken Curry</h6>
+                                <small class="text-muted">Dinner</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">38 orders</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Masala Dosa</h6>
+                                <small class="text-muted">Breakfast</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">32 orders</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Recent Issues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-thermometer-half me-2"></i>
+                        <strong>Temperature Alert:</strong> Refrigerator temperature is above normal range.
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-box me-2"></i>
+                        <strong>Inventory Alert:</strong> Low stock of vegetables. Reorder needed.
+                    </div>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Quality Check:</strong> All food items passed quality inspection.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Canteen Status Modal -->
+<div class="modal fade" id="canteenStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-utensils me-2"></i>Canteen Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Kitchen Equipment</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Stove:</span>
+                            <span class="badge bg-success">Operational</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Refrigerator:</span>
+                            <span class="badge bg-warning">High Temperature</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Microwave:</span>
+                            <span class="badge bg-success">Operational</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Dishwasher:</span>
+                            <span class="badge bg-success">Operational</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Food Safety</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Temperature:</span>
+                            <span class="badge bg-warning">Above Normal</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Hygiene:</span>
+                            <span class="badge bg-success">Excellent</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Staff Health:</span>
+                            <span class="badge bg-success">All Clear</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Pest Control:</span>
+                            <span class="badge bg-success">Under Control</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <button class="btn btn-warning" onclick="requestMaintenance()">
+                        <i class="fas fa-tools me-2"></i>Request Maintenance
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal fade" id="inventoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-boxes me-2"></i>Inventory Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Rice</td>
+                                <td>50 kg</td>
+                                <td><span class="badge bg-success">Sufficient</span></td>
+                                <td>Today</td>
+                            </tr>
+                            <tr>
+                                <td>Vegetables</td>
+                                <td>15 kg</td>
+                                <td><span class="badge bg-warning">Low Stock</span></td>
+                                <td>Today</td>
+                            </tr>
+                            <tr>
+                                <td>Chicken</td>
+                                <td>25 kg</td>
+                                <td><span class="badge bg-success">Sufficient</span></td>
+                                <td>Today</td>
+                            </tr>
+                            <tr>
+                                <td>Cooking Oil</td>
+                                <td>10 L</td>
+                                <td><span class="badge bg-danger">Critical</span></td>
+                                <td>Yesterday</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="placeOrder()">
+                    <i class="fas fa-shopping-cart me-2"></i>Place Order
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewCanteenStatus() {
+    const modal = new bootstrap.Modal(document.getElementById('canteenStatusModal'));
+    modal.show();
+}
+
+function viewInventory() {
+    const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+    modal.show();
+}
+
+function requestMaintenance() {
+    const equipment = prompt('Enter equipment name for maintenance request:');
+    if (equipment) {
+        // Here you would typically make an AJAX call to request maintenance
+        alert(`Maintenance request submitted for ${equipment}!`);
+    }
+}
+
+function placeOrder() {
+    if (confirm('Place order for low stock items?')) {
+        // Here you would typically make an AJAX call to place order
+        alert('Order placed successfully!');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('inventoryModal'));
+        modal.hide();
+    }
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(function() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                console.log('New notifications:', data);
+            }
+        });
+}, 30000);
+</script>
+{% endblock %} 

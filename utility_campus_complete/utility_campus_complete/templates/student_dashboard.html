@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-user-graduate me-3"></i>Student Dashboard
+            </h1>
+            <p class="lead text-muted">Welcome back, {{ session.username }}! Access your campus services.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('book_room') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-calendar-plus me-2"></i>Book Room
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('washroom_status') }}" class="btn btn-info w-100">
+                                <i class="fas fa-restroom me-2"></i>Washroom Status
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-success w-100" onclick="checkLibraryStatus()">
+                                <i class="fas fa-book me-2"></i>Library Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Rooms -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-door-open me-2"></i>Available Rooms
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if available_rooms %}
+                        {% for room in available_rooms %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ room.room_name }}</h6>
+                                <p class="mb-1 text-muted small">Capacity: {{ room.capacity }} people</p>
+                                <small class="text-muted">{{ room.room_type.title() }}</small>
+                            </div>
+                            <span class="status-badge status-available">Available</span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center">
+                            <a href="{{ url_for('book_room') }}" class="btn btn-outline-primary btn-sm">
+                                Book a Room
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-door-closed fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No rooms available at the moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bus Schedule -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bus me-2"></i>Bus Schedule
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if bus_routes %}
+                        {% for route in bus_routes %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ route.route_name }}</h6>
+                                <p class="mb-1 text-muted small">To: {{ route.destination }}</p>
+                                <small class="text-muted">Departure: {{ route.departure_time }}</small>
+                            </div>
+                            <span class="badge bg-success">{{ route.status.title() }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bus fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No bus routes available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canteen Menu -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-utensils me-2"></i>Today's Canteen Menu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if canteen_menu %}
+                        <div class="row">
+                            {% for item in canteen_menu %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-utensils fa-2x text-warning mb-2"></i>
+                                        <h6 class="card-title">{{ item.item_name }}</h6>
+                                        <p class="card-text text-muted">{{ item.meal_type.title() }}</p>
+                                        <span class="badge bg-success">₹{{ item.price }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No menu items available for today</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ notification.message }}</p>
+                                <small class="text-muted">{{ notification.created_at.split(' ')[0] }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if notification.category == 'alert' else 'info' if notification.category == 'info' else 'success' }}">
+                                {{ notification.category.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No new notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campus Status -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Campus Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-door-open fa-2x text-success mb-2"></i>
+                                <h6>Available Rooms</h6>
+                                <span class="badge bg-success">{{ available_rooms|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-bus fa-2x text-primary mb-2"></i>
+                                <h6>Active Bus Routes</h6>
+                                <span class="badge bg-primary">{{ bus_routes|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-utensils fa-2x text-warning mb-2"></i>
+                                <h6>Menu Items</h6>
+                                <span class="badge bg-warning">{{ canteen_menu|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-bell fa-2x text-info mb-2"></i>
+                                <h6>Notifications</h6>
+                                <span class="badge bg-info">{{ notifications|length }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Library Status Modal -->
+<div class="modal fade" id="libraryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-book me-2"></i>Library Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-book fa-3x text-success mb-3"></i>
+                    <h6>Library is Open</h6>
+                    <p class="text-muted">Current occupancy: 45%</p>
+                    <p class="text-muted">Available seats: 28</p>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" style="width: 45%"></div>
+                    </div>
+                    <small class="text-muted">Last updated: 2 minutes ago</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkLibraryStatus() {
+    // Simulate library status check
+    const modal = new bootstrap.Modal(document.getElementById('libraryModal'));
+    modal.show();
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(function() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                // Update notification count
+                console.log('New notifications:', data);
+            }
+        });
+}, 30000);
+</script>
+{% endblock %} 

@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}AI Voice Alerts - Library Silence{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-volume-up me-3"></i>AI Voice Alerts - Library Silence
+            </h1>
+            <p class="lead text-muted">Monitor and manage AI-powered voice alerts to maintain silence in the library.</p>
+        </div>
+    </div>
+
+    <!-- Current Alert Status -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Current Alert Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="alert-status-card bg-success text-white">
+                                <h6><i class="fas fa-check-circle me-2"></i>Library Main Hall</h6>
+                                <p class="mb-0">Silence Level: 85%</p>
+                                <small>Last Alert: 5 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="alert-status-card bg-warning text-dark">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Study Rooms</h6>
+                                <p class="mb-0">Silence Level: 65%</p>
+                                <small>Last Alert: 2 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="alert-status-card bg-danger text-white">
+                                <h6><i class="fas fa-volume-up me-2"></i>Computer Section</h6>
+                                <p class="mb-0">Silence Level: 45%</p>
+                                <small>Last Alert: 30 seconds ago</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="alert-status-card bg-info text-white">
+                                <h6><i class="fas fa-info-circle me-2"></i>Reading Area</h6>
+                                <p class="mb-0">Silence Level: 90%</p>
+                                <small>Last Alert: 10 minutes ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Configuration -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Alert Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <select class="form-select" id="location">
+                                <option value="library_main">Library Main Hall</option>
+                                <option value="study_rooms">Study Rooms</option>
+                                <option value="computer_section">Computer Section</option>
+                                <option value="reading_area">Reading Area</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="threshold" class="form-label">Noise Threshold (dB)</label>
+                            <input type="range" class="form-range" id="threshold" min="30" max="80" value="60">
+                            <div class="d-flex justify-content-between">
+                                <small>30 dB</small>
+                                <small id="threshold-value">60 dB</small>
+                                <small>80 dB</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="alert-message" class="form-label">Alert Message</label>
+                            <textarea class="form-control" id="alert-message" rows="3" placeholder="Please maintain silence in the library...">Please maintain silence in the library. Thank you for your cooperation.</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enable-alerts" checked>
+                                <label class="form-check-label" for="enable-alerts">
+                                    Enable AI Voice Alerts
+                                </label>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveAlertConfig()">
+                            <i class="fas fa-save me-2"></i>Save Configuration
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Alerts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert-list">
+                        <div class="alert-item">
+                            <div class="alert-time">2:30 PM</div>
+                            <div class="alert-content">
+                                <strong>Computer Section</strong>
+                                <p class="mb-0">Voice alert triggered - Noise level exceeded threshold</p>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-time">2:15 PM</div>
+                            <div class="alert-content">
+                                <strong>Study Rooms</strong>
+                                <p class="mb-0">Voice alert triggered - Noise level exceeded threshold</p>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-time">2:00 PM</div>
+                            <div class="alert-content">
+                                <strong>Library Main Hall</strong>
+                                <p class="mb-0">Voice alert triggered - Noise level exceeded threshold</p>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-time">1:45 PM</div>
+                            <div class="alert-content">
+                                <strong>Reading Area</strong>
+                                <p class="mb-0">Voice alert triggered - Noise level exceeded threshold</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Monitoring -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Real-time Noise Monitoring
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="noise-monitor">
+                        <div class="noise-level">
+                            <span class="noise-value" id="current-noise">65</span>
+                            <span class="noise-unit">dB</span>
+                        </div>
+                        <div class="noise-bar">
+                            <div class="noise-progress" id="noise-progress" style="width: 65%"></div>
+                        </div>
+                        <div class="noise-labels">
+                            <span>Quiet</span>
+                            <span>Moderate</span>
+                            <span>Loud</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-status-card {
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.alert-status-card h6 {
+    margin-bottom: 10px;
+}
+
+.alert-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert-time {
+    font-weight: bold;
+    color: #6c757d;
+    min-width: 80px;
+}
+
+.alert-content {
+    flex: 1;
+    margin-left: 15px;
+}
+
+.noise-monitor {
+    text-align: center;
+    padding: 30px;
+}
+
+.noise-level {
+    margin-bottom: 20px;
+}
+
+.noise-value {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.noise-unit {
+    font-size: 1.5rem;
+    color: #6c757d;
+}
+
+.noise-bar {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.noise-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+    transition: width 0.3s ease;
+}
+
+.noise-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+</style>
+
+<script>
+// Update threshold value display
+document.getElementById('threshold').addEventListener('input', function() {
+    document.getElementById('threshold-value').textContent = this.value + ' dB';
+});
+
+// Simulate real-time noise monitoring
+function updateNoiseLevel() {
+    const noise = Math.floor(Math.random() * 40) + 40; // 40-80 dB
+    document.getElementById('current-noise').textContent = noise;
+    document.getElementById('noise-progress').style.width = ((noise - 30) / 50 * 100) + '%';
+    
+    // Change color based on noise level
+    const progress = document.getElementById('noise-progress');
+    if (noise < 50) {
+        progress.style.background = '#28a745';
+    } else if (noise < 70) {
+        progress.style.background = '#ffc107';
+    } else {
+        progress.style.background = '#dc3545';
+    }
+}
+
+// Update noise level every 2 seconds
+setInterval(updateNoiseLevel, 2000);
+
+function saveAlertConfig() {
+    const location = document.getElementById('location').value;
+    const threshold = document.getElementById('threshold').value;
+    const message = document.getElementById('alert-message').value;
+    const enabled = document.getElementById('enable-alerts').checked;
+    
+    // Simulate saving configuration
+    alert('Alert configuration saved successfully!');
+}
+
+// Simulate alert triggers
+setInterval(() => {
+    const noise = Math.floor(Math.random() * 40) + 40;
+    if (noise > 70) {
+        // Simulate voice alert
+        console.log('Voice alert triggered - Noise level:', noise + ' dB');
+    }
+}, 5000);
+</script>
+{% endblock %} 

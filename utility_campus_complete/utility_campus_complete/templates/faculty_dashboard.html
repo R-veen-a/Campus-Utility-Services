@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-chalkboard-teacher me-3"></i>Faculty Dashboard
+            </h1>
+            <p class="lead text-muted">Welcome back, {{ session.username }}! Manage your teaching schedule and campus services.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('teacher_availability') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-clock me-2"></i>Set Availability
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('book_room') }}" class="btn btn-success w-100">
+                                <i class="fas fa-calendar-plus me-2"></i>Book Room
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-info w-100" onclick="checkClassroomStatus()">
+                                <i class="fas fa-chalkboard me-2"></i>Classroom Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Availability -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Your Availability
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if teacher_availability %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for availability in teacher_availability %}
+                                    <tr>
+                                        <td>{{ availability.day_of_week }}</td>
+                                        <td>{{ availability.start_time }} - {{ availability.end_time }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if availability.status == 'available' else 'danger' }}">
+                                                {{ availability.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No availability set</p>
+                            <a href="{{ url_for('teacher_availability') }}" class="btn btn-primary">
+                                Set Your Availability
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ notification.message[:50] }}...</p>
+                                <small class="text-muted">{{ notification.created_at.split(' ')[0] }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if notification.category == 'alert' else 'info' if notification.category == 'info' else 'success' }}">
+                                {{ notification.category.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No new notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campus Services -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bus me-2"></i>Bus Schedule
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center p-4">
+                        <i class="fas fa-bus fa-3x text-primary mb-3"></i>
+                        <h6>Route 1 - Downtown</h6>
+                        <p class="text-muted">Departure: 08:00 AM</p>
+                        <p class="text-muted">Return: 05:30 PM</p>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-utensils me-2"></i>Canteen Menu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center p-4">
+                        <i class="fas fa-utensils fa-3x text-warning mb-3"></i>
+                        <h6>Today's Special</h6>
+                        <p class="text-muted">Vegetable Biryani</p>
+                        <p class="text-muted">₹120</p>
+                        <span class="badge bg-success">Available</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Alerts -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>System Alerts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Energy Alert:</strong> Computer systems detected in Room 101 after hours. Please ensure all systems are turned off.
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-volume-up me-2"></i>
+                        <strong>Library Alert:</strong> AI voice system activated for maintaining silence in the library.
+                    </div>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-camera me-2"></i>
+                        <strong>Security:</strong> Camera systems monitoring classroom occupancy and washroom status.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Classroom Status Modal -->
+<div class="modal fade" id="classroomModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chalkboard me-2"></i>Classroom Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Room 101</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Occupancy:</span>
+                            <span class="badge bg-success">Empty</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Systems:</span>
+                            <span class="badge bg-danger">ON</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Lights:</span>
+                            <span class="badge bg-warning">ON</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Room 102</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Occupancy:</span>
+                            <span class="badge bg-warning">Occupied</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Systems:</span>
+                            <span class="badge bg-success">OFF</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Lights:</span>
+                            <span class="badge bg-success">OFF</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <button class="btn btn-warning" onclick="sendSystemAlert()">
+                        <i class="fas fa-bell me-2"></i>Send System Alert
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkClassroomStatus() {
+    const modal = new bootstrap.Modal(document.getElementById('classroomModal'));
+    modal.show();
+}
+
+function sendSystemAlert() {
+    // Simulate sending system alert
+    alert('System alert sent to Room 101 occupants!');
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(function() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                console.log('New notifications:', data);
+            }
+        });
+}, 30000);
+</script>
+{% endblock %} 

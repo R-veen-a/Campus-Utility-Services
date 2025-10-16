@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Maintenance Photo{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-camera me-3"></i>Upload Maintenance Photo
+            </h1>
+            <p class="lead text-muted">Upload photos for maintenance issues to help resolve problems faster.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload Photo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Select Photo</label>
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPG, PNG, GIF (Max 5MB)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Add any additional details about the issue..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload Photo
+                        </button>
+                        <a href="{{ url_for('report_issue') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Issues
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Issue Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if issue %}
+                    <h6>Issue Information</h6>
+                    <p><strong>Category:</strong> {{ issue.category }}</p>
+                    <p><strong>Location:</strong> {{ issue.location }}</p>
+                    <p><strong>Description:</strong> {{ issue.description }}</p>
+                    <p><strong>Priority:</strong> 
+                        <span class="badge bg-{{ 'danger' if issue.priority == 'high' else 'warning' if issue.priority == 'medium' else 'success' }}">
+                            {{ issue.priority.title() }}
+                        </span>
+                    </p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-{{ 'success' if issue.status == 'resolved' else 'warning' if issue.status == 'in_progress' else 'danger' }}">
+                            {{ issue.status.title() }}
+                        </span>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if photos %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-images me-2"></i>Uploaded Photos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for photo in photos %}
+                        <div class="col-md-4 mb-3">
+                            <div class="photo-item">
+                                <img src="{{ url_for('static', filename='uploads/' + photo.photo_path) }}" 
+                                     class="img-fluid rounded" alt="Maintenance Photo">
+                                <div class="photo-info mt-2">
+                                    <small class="text-muted">Uploaded: {{ photo.uploaded_at }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.photo-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+</style>
+{% endblock %} 

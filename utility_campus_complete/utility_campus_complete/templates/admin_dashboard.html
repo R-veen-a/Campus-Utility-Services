@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-user-shield me-3"></i>Admin Dashboard
+            </h1>
+            <p class="lead text-muted">Welcome back, {{ session.username }}! Manage the entire campus system.</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ users|length }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ issues|length }}</div>
+            <div class="stat-label">Active Issues</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ bookings|length }}</div>
+            <div class="stat-label">Room Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ issues|selectattr('status', 'equalto', 'open')|list|length }}</div>
+            <div class="stat-label">Open Issues</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('book_room') }}" class="btn btn-success w-100">
+                                <i class="fas fa-calendar-plus me-2"></i>Book Room
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('canteen_menu') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-utensils me-2"></i>Manage Menu
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('washroom_status') }}" class="btn btn-info w-100">
+                                <i class="fas fa-restroom me-2"></i>Washroom Status
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>User Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Email</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'success' if user.role == 'student' else 'warning' if user.role == 'faculty' else 'info' if user.role == 'chef' else 'secondary' }}">
+                                            {{ user.role.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.email or 'N/A' }}</td>
+                                    <td>{{ user.created_at.split(' ')[0] }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <a href="{{ url_for('delete_item', item_type='user', item_id=user.id) }}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this user?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Issues -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Recent Issues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for issue in issues[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">{{ issue.category.title() }}</h6>
+                            <p class="mb-1 text-muted small">{{ issue.description[:50] }}...</p>
+                            <small class="text-muted">by {{ issue.username }} on {{ issue.created_at.split(' ')[0] }}</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{{ 'danger' if issue.priority == 'high' else 'warning' if issue.priority == 'medium' else 'success' }} me-2">
+                                {{ issue.priority.title() }}
+                            </span>
+                            <a href="{{ url_for('delete_item', item_type='issue', item_id=issue.id) }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this issue?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center">
+                        <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">
+                            View All Issues
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Recent Bookings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for booking in bookings[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">{{ booking.room_name }}</h6>
+                            <p class="mb-1 text-muted small">{{ booking.purpose[:50] }}...</p>
+                            <small class="text-muted">{{ booking.booking_date }} | {{ booking.start_time }} - {{ booking.end_time }}</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">{{ booking.status.title() }}</span>
+                            <a href="{{ url_for('delete_item', item_type='booking', item_id=booking.id) }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this booking?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center">
+                        <a href="{{ url_for('book_room') }}" class="btn btn-outline-primary btn-sm">
+                            View All Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server me-2"></i>System Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-database fa-2x text-success mb-2"></i>
+                                <h6>Database</h6>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6>Active Users</h6>
+                                <span class="badge bg-primary">{{ users|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <h6>Open Issues</h6>
+                                <span class="badge bg-warning">{{ issues|selectattr('status', 'equalto', 'open')|list|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                                <h6>Today's Bookings</h6>
+                                <span class="badge bg-info">{{ bookings|selectattr('booking_date', 'equalto', today)|list|length }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

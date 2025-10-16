@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Campus Management System{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="fas fa-university me-3"></i>Campus Management System
+        </h1>
+        <p class="lead text-muted">Comprehensive campus management solution for students, faculty, and staff</p>
+    </div>
+
+    {% if not session.user_id %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">Login to Your Account</h3>
+                    
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4">
+                        <h5 class="text-center mb-3">Demo Accounts</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-1">Student</h6>
+                                        <small class="text-muted">Username: student1 | Password: student123</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-1">Faculty</h6>
+                                        <small class="text-muted">Username: faculty1 | Password: faculty123</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-1">Admin</h6>
+                                        <small class="text-muted">Username: admin | Password: admin123</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-1">Chef</h6>
+                                        <small class="text-muted">Username: chef1 | Password: chef123</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-1">Bus Coordinator</h6>
+                                        <small class="text-muted">Username: buscoord1 | Password: bus123</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">Welcome back, {{ session.username }}!</h4>
+                <p>You are logged in as a <strong>{{ session.role.title() }}</strong>.</p>
+                <hr>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h2 class="text-center mb-4">System Features</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-calendar-alt fa-3x mb-3"></i>
+                    <h4>Room Booking</h4>
+                    <p>Book classrooms, labs, and conference rooms with real-time availability checking</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h4>Issue Reporting</h4>
+                    <p>Report maintenance issues, facility problems, and get real-time updates</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-bus fa-3x mb-3"></i>
+                    <h4>Bus Management</h4>
+                    <p>View bus schedules, routes, and get notifications about departures</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-utensils fa-3x mb-3"></i>
+                    <h4>Canteen Menu</h4>
+                    <p>View daily menus, special items, and nutritional information</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-restroom fa-3x mb-3"></i>
+                    <h4>Washroom Status</h4>
+                    <p>Check washroom availability and cleanliness status in real-time</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="text-center">
+                    <i class="fas fa-bell fa-3x mb-3"></i>
+                    <h4>Notifications</h4>
+                    <p>Receive instant notifications about events, alerts, and important updates</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Role-Based Features</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-user-graduate me-2"></i>Students</h5>
+                            <ul>
+                                <li>Book rooms and view availability</li>
+                                <li>Report issues and maintenance requests</li>
+                                <li>View teacher availability</li>
+                                <li>Check bus schedules</li>
+                                <li>View canteen menus</li>
+                                <li>Receive notifications</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-chalkboard-teacher me-2"></i>Faculty</h5>
+                            <ul>
+                                <li>Manage teacher availability</li>
+                                <li>Book rooms for classes</li>
+                                <li>Report issues</li>
+                                <li>View notifications</li>
+                                <li>Check bus schedules</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-user-shield me-2"></i>Admin</h5>
+                            <ul>
+                                <li>Manage all users</li>
+                                <li>View and resolve issues</li>
+                                <li>Manage room bookings</li>
+                                <li>System-wide notifications</li>
+                                <li>Complete system oversight</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-utensils me-2"></i>Chef & Bus Coordinator</h5>
+                            <ul>
+                                <li>Manage canteen menus</li>
+                                <li>Update bus routes</li>
+                                <li>Report issues</li>
+                                <li>View notifications</li>
+                                <li>Manage schedules</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

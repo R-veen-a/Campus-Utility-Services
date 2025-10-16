@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}Bus Coordinator Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-bus me-3"></i>Bus Coordinator Dashboard
+            </h1>
+            <p class="lead text-muted">Welcome back, {{ session.username }}! Manage bus routes and transportation services.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('bus_routes') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-route me-2"></i>Manage Routes
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-danger w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-success w-100" onclick="viewBusStatus()">
+                                <i class="fas fa-eye me-2"></i>Bus Status
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-info w-100" onclick="viewCanteenCamera()">
+                                <i class="fas fa-camera me-2"></i>Canteen Camera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bus Routes Overview -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-route me-2"></i>Active Bus Routes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if bus_routes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Route Name</th>
+                                        <th>Destination</th>
+                                        <th>Departure Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for route in bus_routes %}
+                                    <tr>
+                                        <td>{{ route.route_name }}</td>
+                                        <td>{{ route.destination }}</td>
+                                        <td>{{ route.departure_time }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if route.status == 'active' else 'danger' }}">
+                                                {{ route.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editRoute({{ route.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="viewRouteDetails({{ route.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bus fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No bus routes found</p>
+                            <a href="{{ url_for('bus_routes') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Bus Route
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ notification.message[:50] }}...</p>
+                                <small class="text-muted">{{ notification.created_at.split(' ')[0] }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if notification.category == 'alert' else 'info' if notification.category == 'info' else 'success' }}">
+                                {{ notification.category.title() }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No new notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Issues -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Recent Bus Issues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if issues %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Description</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Reported</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for issue in issues %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-{{ 'primary' if issue.category == 'bus' else 'warning' }}">
+                                                {{ issue.category.title() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ issue.location }}</td>
+                                        <td>{{ issue.description[:50] }}...</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if issue.priority == 'high' else 'warning' if issue.priority == 'medium' else 'success' }}">
+                                                {{ issue.priority.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if issue.status == 'resolved' else 'warning' if issue.status == 'in_progress' else 'danger' if issue.status == 'closed' else 'primary' }}">
+                                                {{ issue.status.replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ issue.created_at.split(' ')[0] }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewIssueDetails({{ issue.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="resolveIssue({{ issue.id }})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p class="text-muted">No bus issues reported</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bus Statistics -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Bus Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-bus fa-2x text-primary mb-2"></i>
+                                <h6>Active Routes</h6>
+                                <span class="badge bg-primary">{{ bus_routes|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                <h6>Daily Passengers</h6>
+                                <span class="badge bg-success">250</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <h6>On-Time Rate</h6>
+                                <span class="badge bg-warning">95%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                                <h6>Open Issues</h6>
+                                <span class="badge bg-danger">{{ issues|length }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bus Status Modal -->
+<div class="modal fade" id="busStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-bus me-2"></i>Live Bus Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Bus 1 - Route 1 (Downtown)</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Status:</span>
+                            <span class="badge bg-success">On Time</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Location:</span>
+                            <span>Downtown Station</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Next Stop:</span>
+                            <span>Campus Gate</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>ETA:</span>
+                            <span>5 minutes</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Passengers:</span>
+                            <span>45/50</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Bus 2 - Route 2 (Suburb)</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Status:</span>
+                            <span class="badge bg-warning">Delayed</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Location:</span>
+                            <span>Suburb Station</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Next Stop:</span>
+                            <span>City Center</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>ETA:</span>
+                            <span>15 minutes</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Passengers:</span>
+                            <span>38/50</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <button class="btn btn-primary" onclick="sendBusAlert()">
+                        <i class="fas fa-bell me-2"></i>Send Bus Alert
+                    </button>
+                    <button class="btn btn-warning" onclick="updateBusSchedule()">
+                        <i class="fas fa-clock me-2"></i>Update Schedule
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Canteen Camera Modal -->
+<div class="modal fade" id="canteenCameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>Canteen Camera Feed
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="bg-dark text-white p-4 rounded mb-3">
+                        <i class="fas fa-video fa-3x mb-3"></i>
+                        <h6>Live Camera Feed</h6>
+                        <p class="mb-0">Canteen area monitoring</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Occupancy Status</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Current Occupancy:</span>
+                                <span class="badge bg-success">65%</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Available Seats:</span>
+                                <span>35</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Queue Length:</span>
+                                <span>12 people</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Safety Alerts</h6>
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>All Clear:</strong> No safety issues detected
+                            </div>
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-users me-2"></i>
+                                <strong>Social Distancing:</strong> Guidelines being followed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewBusStatus() {
+    const modal = new bootstrap.Modal(document.getElementById('busStatusModal'));
+    modal.show();
+}
+
+function viewCanteenCamera() {
+    const modal = new bootstrap.Modal(document.getElementById('canteenCameraModal'));
+    modal.show();
+}
+
+function editRoute(id) {
+    // Redirect to bus routes page for editing
+    window.location.href = '/bus_routes';
+}
+
+function viewRouteDetails(id) {
+    // Simulate viewing route details
+    alert('Route details would be displayed here');
+}
+
+function viewIssueDetails(id) {
+    // Simulate viewing issue details
+    alert('Issue details would be displayed here');
+}
+
+function resolveIssue(id) {
+    if (confirm('Mark this issue as resolved?')) {
+        // Here you would typically make an AJAX call to resolve the issue
+        alert('Issue marked as resolved successfully!');
+        location.reload();
+    }
+}
+
+function sendBusAlert() {
+    const message = prompt('Enter bus alert message:');
+    if (message) {
+        // Here you would typically make an AJAX call to send bus alert
+        alert(`Bus alert sent: ${message}`);
+    }
+}
+
+function updateBusSchedule() {
+    if (confirm('Update bus schedule for all routes?')) {
+        // Here you would typically make an AJAX call to update schedule
+        alert('Bus schedule updated successfully!');
+    }
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(function() {
+    fetch('/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                console.log('New notifications:', data);
+            }
+        });
+}, 30000);
+</script>
+{% endblock %} 

@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Book Room{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-calendar-plus me-3"></i>Book a Room
+            </h1>
+            <p class="lead text-muted">Check room availability and book your preferred time slot.</p>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>New Booking
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="room_id" class="form-label">Select Room</label>
+                                <select class="form-control" id="room_id" name="room_id" required>
+                                    <option value="">Choose a room...</option>
+                                    {% for room in rooms %}
+                                    <option value="{{ room.id }}">{{ room.room_name }} ({{ room.capacity }} people)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="booking_date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="booking_date" name="booking_date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_time" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="purpose" class="form-label">Purpose</label>
+                            <textarea class="form-control" id="purpose" name="purpose" rows="3" placeholder="Describe the purpose of your booking..." required></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calendar-check me-2"></i>Book Room
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Availability -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-door-open me-2"></i>Available Rooms
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for room in rooms %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">{{ room.room_name }}</h6>
+                            <p class="mb-1 text-muted small">Capacity: {{ room.capacity }} people</p>
+                            <small class="text-muted">{{ room.room_type.title() }}</small>
+                        </div>
+                        <span class="status-badge status-available">Available</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>My Bookings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if my_bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in my_bookings %}
+                                    <tr>
+                                        <td>{{ booking.room_name }}</td>
+                                        <td>{{ booking.booking_date }}</td>
+                                        <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
+                                        <td>{{ booking.purpose[:50] }}...</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' if booking.status == 'pending' else 'danger' }}">
+                                                {{ booking.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking({{ booking.id }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No bookings found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Conflict Modal -->
+<div class="modal fade" id="conflictModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Booking Conflict
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-calendar-times fa-3x text-danger mb-3"></i>
+                    <h6>Room Already Booked</h6>
+                    <p class="text-muted">The selected room is already booked for the requested time slot.</p>
+                    <p class="text-muted">Please choose a different time or room.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set minimum date to today
+document.getElementById('booking_date').min = new Date().toISOString().split('T')[0];
+
+// Validate time inputs
+document.getElementById('end_time').addEventListener('change', function() {
+    const startTime = document.getElementById('start_time').value;
+    const endTime = this.value;
+    
+    if (startTime && endTime && startTime >= endTime) {
+        alert('End time must be after start time');
+        this.value = '';
+    }
+});
+
+function cancelBooking(bookingId) {
+    if (confirm('Are you sure you want to cancel this booking?')) {
+        // Here you would typically make an AJAX call to cancel the booking
+        alert('Booking cancelled successfully!');
+        location.reload();
+    }
+}
+
+// Check for booking conflicts on form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const roomId = document.getElementById('room_id').value;
+    const date = document.getElementById('booking_date').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    
+    if (!roomId || !date || !startTime || !endTime) {
+        e.preventDefault();
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    // Simulate conflict checking
+    if (Math.random() < 0.3) { // 30% chance of conflict for demo
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('conflictModal'));
+        modal.show();
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Washroom Status{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-6 fw-bold text-primary">
+                <i class="fas fa-restroom me-3"></i>Washroom Status
+            </h1>
+            <p class="lead text-muted">Check and update washroom cleanliness and availability status.</p>
+        </div>
+    </div>
+
+    <!-- Update Washroom Status -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Update Washroom Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label">Washroom Location</label>
+                                <select class="form-control" id="location" name="location" required>
+                                    <option value="">Select location...</option>
+                                    <option value="Block A - Ground Floor">Block A - Ground Floor</option>
+                                    <option value="Block A - First Floor">Block A - First Floor</option>
+                                    <option value="Block B - Ground Floor">Block B - Ground Floor</option>
+                                    <option value="Block B - First Floor">Block B - First Floor</option>
+                                    <option value="Library">Library</option>
+                                    <option value="Canteen Area">Canteen Area</option>
+                                    <option value="Sports Complex">Sports Complex</option>
+                                    <option value="Admin Block">Admin Block</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-control" id="status" name="status" required>
+                                    <option value="">Select status...</option>
+                                    <option value="clean">Clean</option>
+                                    <option value="unclean">Unclean</option>
+                                    <option value="maintenance">Under Maintenance</option>
+                                    <option value="occupied">Occupied</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Status
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" onclick="markAllClean()">
+                            <i class="fas fa-check me-2"></i>Mark All Clean
+                        </button>
+                        <button class="btn btn-warning" onclick="requestMaintenance()">
+                            <i class="fas fa-tools me-2"></i>Request Maintenance
+                        </button>
+                        <button class="btn btn-info" onclick="viewWashroomMap()">
+                            <i class="fas fa-map me-2"></i>View Washroom Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Washroom Status -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Current Washroom Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if washrooms %}
+                        <div class="row">
+                            {% for washroom in washrooms %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">{{ washroom.location }}</h6>
+                                            <span class="status-badge status-{{ washroom.status }}">
+                                                {{ washroom.status.title() }}
+                                            </span>
+                                        </div>
+                                        <p class="card-text text-muted small">
+                                            Last updated: {{ washroom.last_updated.split(' ')[0] if washroom.last_updated else 'N/A' }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ washroom.last_updated.split(' ')[1] if washroom.last_updated else 'N/A' }}
+                                            </small>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="updateWashroomStatus('{{ washroom.location }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fas fa-restroom fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No washroom status found</p>
+                            <p class="text-muted">Update washroom status to get started.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Update Washroom Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateStatusForm">
+                    <div class="mb-3">
+                        <label for="modal_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="modal_location" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_status" class="form-label">Status</label>
+                        <select class="form-control" id="modal_status" name="status" required>
+                            <option value="clean">Clean</option>
+                            <option value="unclean">Unclean</option>
+                            <option value="maintenance">Under Maintenance</option>
+                            <option value="occupied">Occupied</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any additional notes..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveStatusUpdate()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Washroom Map Modal -->
+<div class="modal fade" id="washroomMapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-map me-2"></i>Campus Washroom Map
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Block A</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Ground Floor:</span>
+                            <span class="badge bg-success">Clean</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>First Floor:</span>
+                            <span class="badge bg-warning">Unclean</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Block B</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Ground Floor:</span>
+                            <span class="badge bg-success">Clean</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>First Floor:</span>
+                            <span class="badge bg-info">Maintenance</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Other Locations</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Library:</span>
+                            <span class="badge bg-success">Clean</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Canteen Area:</span>
+                            <span class="badge bg-success">Clean</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Legend</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-success">Clean</span>
+                            <small>Available and clean</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-warning">Unclean</span>
+                            <small>Needs cleaning</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-info">Maintenance</span>
+                            <small>Under repair</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateWashroomStatus(location) {
+    document.getElementById('modal_location').value = location;
+    document.getElementById('modal_status').value = 'clean';
+    document.getElementById('notes').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+    modal.show();
+}
+
+function saveStatusUpdate() {
+    const location = document.getElementById('modal_location').value;
+    const status = document.getElementById('modal_status').value;
+    const notes = document.getElementById('notes').value;
+    
+    if (!location || !status) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Here you would typically make an AJAX call to update the status
+    alert(`Washroom status updated successfully!\nLocation: ${location}\nStatus: ${status}`);
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+    modal.hide();
+    location.reload();
+}
+
+function markAllClean() {
+    if (confirm('Mark all washrooms as clean?')) {
+        // Here you would typically make an AJAX call to mark all washrooms as clean
+        alert('All washrooms marked as clean successfully!');
+        location.reload();
+    }
+}
+
+function requestMaintenance() {
+    const location = prompt('Enter washroom location for maintenance request:');
+    if (location) {
+        // Here you would typically make an AJAX call to request maintenance
+        alert(`Maintenance request submitted for ${location}!`);
+    }
+}
+
+function viewWashroomMap() {
+    const modal = new bootstrap.Modal(document.getElementById('washroomMapModal'));
+    modal.show();
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const location = document.getElementById('location').value;
+    const status = document.getElementById('status').value;
+    
+    if (!location || !status) {
+        e.preventDefault();
+        alert('Please fill in all fields');
+        return;
+    }
+});
+</script>
+{% endblock %} 
